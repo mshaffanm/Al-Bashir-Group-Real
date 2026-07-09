@@ -23,7 +23,7 @@ import {
   X,
   ClipboardList,
 } from 'lucide-react';
-import { Survey, Question, Advisor } from '../types.js';
+import { Survey, Question, Advisor } from './types.js';
 
 interface CRMDashboardProps {
   surveys: Survey[];

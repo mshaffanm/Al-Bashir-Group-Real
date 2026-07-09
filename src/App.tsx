@@ -5,11 +5,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { BarChart3, ClipboardList, RefreshCw, Loader2, Lock, KeyRound, ArrowRight } from 'lucide-react';
-import CustomerSurvey from './components/CustomerSurvey.js';
-import CRMDashboard from './components/CRMDashboard.js';
-import { Survey, Question, Advisor } from './types.js';
+import CustomerSurvey from './CustomerSurvey';
+import CRMDashboard from './CRMDashboard';
+import { Survey, Question, Advisor } from './types';
 // @ts-ignore
-import alBashirLogo from './assets/images/al_bashir_logo_1783064957865.jpg';
+import alBashirLogo from './al_bashir_logo_1783064957865 (2).jpg';
+
+const CRM_DASHBOARD_PASSWORD = 'Albashir321';
+const CUSTOMER_PORTAL_PASSWORD = 'Customer321';
 
 export default function App() {
   const [view, setView] = useState<'dashboard' | 'survey'>('dashboard');
@@ -22,12 +25,17 @@ export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     return localStorage.getItem('crm_dashboard_auth') === 'true';
   });
+  const [isPortalAuthenticated, setIsPortalAuthenticated] = useState(() => {
+    return localStorage.getItem('customer_portal_auth') === 'true';
+  });
   const [password, setPassword] = useState('');
+  const [portalPassword, setPortalPassword] = useState('');
   const [authError, setAuthError] = useState('');
+  const [portalAuthError, setPortalAuthError] = useState('');
 
-  const handleLoginSubmit = (e: React.FormEvent) => {
+  const handleDashboardLoginSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === 'admin' || password === 'bashir123') {
+    if (password === CRM_DASHBOARD_PASSWORD) {
       setIsAuthenticated(true);
       localStorage.setItem('crm_dashboard_auth', 'true');
       setAuthError('');
@@ -36,10 +44,27 @@ export default function App() {
     }
   };
 
-  const handleLogout = () => {
+  const handlePortalLoginSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (portalPassword === CUSTOMER_PORTAL_PASSWORD) {
+      setIsPortalAuthenticated(true);
+      localStorage.setItem('customer_portal_auth', 'true');
+      setPortalAuthError('');
+    } else {
+      setPortalAuthError('Incorrect password. Please try again.');
+    }
+  };
+
+  const handleDashboardLogout = () => {
     setIsAuthenticated(false);
     localStorage.removeItem('crm_dashboard_auth');
     setPassword('');
+  };
+
+  const handlePortalLogout = () => {
+    setIsPortalAuthenticated(false);
+    localStorage.removeItem('customer_portal_auth');
+    setPortalPassword('');
   };
 
   const fetchSurveys = async (showRefreshIndicator = false) => {
@@ -157,7 +182,7 @@ export default function App() {
 
             {view === 'dashboard' && isAuthenticated && (
               <button
-                onClick={handleLogout}
+                onClick={handleDashboardLogout}
                 className="p-1.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all cursor-pointer flex items-center gap-1 border border-transparent hover:border-red-200/50"
                 title="Lock / Logout Dashboard"
                 id="header-lock-btn"
@@ -215,7 +240,6 @@ export default function App() {
           ) : (
             <div className="max-w-md mx-auto my-12 animate-fade-in" id="password-auth-container">
               <div className="bg-white/80 backdrop-blur-md rounded-2xl border border-slate-200 shadow-xl overflow-hidden">
-                {/* Header branding */}
                 <div className="bg-gradient-to-r from-slate-900 to-slate-800 px-6 py-8 text-white text-center relative">
                   <div className="mx-auto w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mb-3 border border-white/20">
                     <KeyRound className="w-6 h-6 text-red-400" />
@@ -226,8 +250,7 @@ export default function App() {
                   </p>
                 </div>
 
-                {/* Form */}
-                <form onSubmit={handleLoginSubmit} className="p-6 space-y-4">
+                <form onSubmit={handleDashboardLoginSubmit} className="p-6 space-y-4">
                   <div>
                     <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
                       Enter Security Password
@@ -262,22 +285,68 @@ export default function App() {
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
 
-                  <div className="pt-2 text-center">
-                    <span className="text-[10px] text-slate-400 bg-slate-100 px-2.5 py-1 rounded-md">
-                      Hint: The default password is <strong className="text-slate-600 font-mono">admin</strong>
-                    </span>
-                  </div>
                 </form>
               </div>
             </div>
           )
-        ) : (
+        ) : isPortalAuthenticated ? (
           <CustomerSurvey
             questions={questions}
             advisors={advisors}
             onSurveySubmitted={fetchSurveys}
             onGoToDashboard={() => setView('dashboard')}
           />
+        ) : (
+          <div className="max-w-md mx-auto my-12 animate-fade-in" id="portal-password-auth-container">
+            <div className="bg-white/80 backdrop-blur-md rounded-2xl border border-slate-200 shadow-xl overflow-hidden">
+              <div className="bg-gradient-to-r from-slate-900 to-slate-800 px-6 py-8 text-white text-center relative">
+                <div className="mx-auto w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mb-3 border border-white/20">
+                  <KeyRound className="w-6 h-6 text-red-400" />
+                </div>
+                <h3 className="font-bold text-lg tracking-tight">Customer Portal Access</h3>
+                <p className="text-[11px] text-slate-300 mt-1 max-w-xs mx-auto">
+                  Enter the password to access the customer portal and submit feedback.
+                </p>
+              </div>
+
+              <form onSubmit={handlePortalLoginSubmit} className="p-6 space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                    Enter Portal Password
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="password"
+                      value={portalPassword}
+                      onChange={(e) => setPortalPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="w-full pl-3 pr-10 py-2.5 text-xs text-slate-800 bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all font-mono"
+                      required
+                      autoFocus
+                    />
+                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-400">
+                      <Lock className="w-4 h-4" />
+                    </div>
+                  </div>
+                </div>
+
+                {portalAuthError && (
+                  <p className="text-[11px] text-red-500 font-semibold text-center" id="portal-auth-error-msg">
+                    ⚠️ {portalAuthError}
+                  </p>
+                )}
+
+                <button
+                  type="submit"
+                  className="w-full flex items-center justify-center gap-1.5 py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-lg transition-colors cursor-pointer shadow-md shadow-red-600/10 text-center"
+                >
+                  Authenticate Portal
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+
+              </form>
+            </div>
+          </div>
         )}
       </main>
 

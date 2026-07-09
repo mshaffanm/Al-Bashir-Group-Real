@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Sparkles, CheckCircle, User, Car, FileText, Sliders, Loader2, RefreshCw } from 'lucide-react';
-import { Survey, Question, Advisor } from '../types.js';
+import { Survey, Question, Advisor } from './types.js';
 
 interface CustomerSurveyProps {
   questions: Question[];

@@ -2,33 +2,30 @@
  * @license
  * SPDX-License-Identifier: Apache-2.0
  */
-
+import 'dotenv/config';
 import express from 'express';
 import path from 'path';
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI, Type } from '@google/genai';
-import dotenv from 'dotenv';
-import { getSurveys, addSurvey, deleteSurvey, getQuestions, addQuestion, updateQuestion, deleteQuestion, getAdvisors, addAdvisor, deleteAdvisor } from './src/server/db.js';
-
-dotenv.config();
-
+import { getSurveys, addSurvey, deleteSurvey, getQuestions, addQuestion, updateQuestion, deleteQuestion, getAdvisors, addAdvisor, deleteAdvisor } from './db.js';
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
 
 app.use(express.json());
 
 // API: Get all surveys
-app.get('/api/surveys', (req, res) => {
+app.get('/api/surveys', async (req, res) => {
   try {
-    const surveys = getSurveys();
+    const surveys = await getSurveys();
     res.json(surveys);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: 'Failed to retrieve surveys.' });
   }
 });
 
 // API: Save new survey with dynamic parameters
-app.post('/api/surveys', (req, res) => {
+app.post('/api/surveys', async (req, res) => {
   try {
     const {
       customerName,
@@ -38,21 +35,19 @@ app.post('/api/surveys', (req, res) => {
       ...ratings
     } = req.body;
 
-    // Basic validation
     if (!customerName || !regNumber || !advisorName) {
       return res.status(400).json({ error: 'Customer Name, Registration Number, and Advisor Name are required.' });
     }
 
-    const questionsList = getQuestions();
+    const questionsList = await getQuestions();
     const sanitizedRatings: { [key: string]: number } = {};
-    
-    // For every question, make sure it has a numeric value, default to 10
+
     questionsList.forEach(q => {
       const val = ratings[q.id];
       sanitizedRatings[q.id] = (val !== undefined && val !== null) ? Number(val) : 10;
     });
 
-    const saved = addSurvey({
+    const saved = await addSurvey({
       customerName,
       regNumber,
       advisorName,
@@ -62,111 +57,120 @@ app.post('/api/surveys', (req, res) => {
 
     res.status(201).json(saved);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: 'Failed to save survey.' });
   }
 });
 
 // API: Delete survey
-app.delete('/api/surveys/:id', (req, res) => {
+app.delete('/api/surveys/:id', async (req, res) => {
   try {
-    const success = deleteSurvey(req.params.id);
+    const success = await deleteSurvey(req.params.id);
     if (success) {
       res.json({ message: 'Survey deleted successfully.' });
     } else {
       res.status(404).json({ error: 'Survey not found.' });
     }
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: 'Failed to delete survey.' });
   }
 });
 
 // API: Get all questions
-app.get('/api/questions', (req, res) => {
+app.get('/api/questions', async (req, res) => {
   try {
-    const questions = getQuestions();
+    const questions = await getQuestions();
     res.json(questions);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: 'Failed to retrieve questions.' });
   }
 });
 
 // API: Add new question
-app.post('/api/questions', (req, res) => {
+app.post('/api/questions', async (req, res) => {
   try {
-    const { header, label, desc } = req.body;
+    const { header, label, description } = req.body;
     if (!header || !label) {
       return res.status(400).json({ error: 'Question short header and full label are required.' });
     }
-    const saved = addQuestion({ header, label, desc: desc || '' });
+    const saved = await addQuestion({ header, label, description: description || '' });
     res.status(201).json(saved);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: 'Failed to save question.' });
   }
 });
 
 // API: Update question
-app.put('/api/questions/:id', (req, res) => {
+app.put('/api/questions/:id', async (req, res) => {
   try {
-    const { header, label, desc } = req.body;
-    const updated = updateQuestion(req.params.id, { header, label, desc });
+    const { header, label, description } = req.body;
+    const updated = await updateQuestion(req.params.id, { header, label, description });
     if (updated) {
       res.json(updated);
     } else {
       res.status(404).json({ error: 'Question not found.' });
     }
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: 'Failed to update question.' });
   }
 });
 
 // API: Delete question
-app.delete('/api/questions/:id', (req, res) => {
+app.delete('/api/questions/:id', async (req, res) => {
   try {
-    const success = deleteQuestion(req.params.id);
+    const success = await deleteQuestion(req.params.id);
     if (success) {
       res.json({ message: 'Question deleted successfully.' });
     } else {
       res.status(404).json({ error: 'Question not found.' });
     }
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: 'Failed to delete question.' });
   }
 });
 
 // API: Get all advisors
-app.get('/api/advisors', (req, res) => {
+app.get('/api/advisors', async (req, res) => {
   try {
-    const advisors = getAdvisors();
+    const advisors = await getAdvisors();
     res.json(advisors);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: 'Failed to retrieve advisors.' });
   }
 });
 
 // API: Add new advisor
-app.post('/api/advisors', (req, res) => {
+app.post('/api/advisors', async (req, res) => {
   try {
     const { name } = req.body;
     if (!name || typeof name !== 'string' || name.trim().length === 0) {
       return res.status(400).json({ error: 'Advisor name is required.' });
     }
-    const saved = addAdvisor({ name: name.trim() });
+    const saved = await addAdvisor({ name: name.trim() });
     res.status(201).json(saved);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: 'Failed to save advisor.' });
   }
 });
 
 // API: Delete advisor
-app.delete('/api/advisors/:name', (req, res) => {
+app.delete('/api/advisors/:name', async (req, res) => {
   try {
-    const success = deleteAdvisor(req.params.name);
+    const success = await deleteAdvisor(req.params.name);
     if (success) {
       res.json({ message: 'Advisor deleted successfully.' });
     } else {
       res.status(404).json({ error: 'Advisor not found.' });
     }
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: 'Failed to delete advisor.' });
   }
 });
@@ -201,12 +205,12 @@ app.post('/api/gemini/parse-survey', async (req, res) => {
     }
 
     const ai = getGeminiClient();
-    const questionsList = getQuestions();
-    const advisorsList = getAdvisors();
+    const questionsList = await getQuestions();
+    const advisorsList = await getAdvisors();
     const advisorsNames = advisorsList.map(a => a.name).join(', ');
 
-    const parametersInstruction = questionsList.map((q, idx) => {
-      return `   - ${q.id}: ${q.label} - ${q.desc}`;
+    const parametersInstruction = questionsList.map((q) => {
+      return `   - ${q.id}: ${q.label} - ${q.description}`;
     }).join('\n');
 
     const systemInstruction = `
@@ -226,7 +230,6 @@ Scoring Guidelines (1 to 10):
 - If a parameter is NOT mentioned at all, default it to a high satisfaction score like 10, or 9, as is typical for neutral non-complaints at Al-Bashir Group, unless there is a global negative sentiment.
 `;
 
-    // Build the dynamic schema properties object
     const schemaProperties: any = {
       customerName: {
         type: Type.STRING,
@@ -249,7 +252,7 @@ Scoring Guidelines (1 to 10):
     questionsList.forEach(q => {
       schemaProperties[q.id] = {
         type: Type.INTEGER,
-        description: `Rating 1-10 on parameter "${q.label}" (${q.desc}).`
+        description: `Rating 1-10 on parameter "${q.label}" (${q.description}).`
       };
     });
 

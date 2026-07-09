@@ -17,7 +17,7 @@ export interface Question {
   id: string;
   header: string;
   label: string;
-  desc: string;
+  description: string;
 }
 
 export interface Advisor {
