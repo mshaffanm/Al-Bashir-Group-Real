@@ -295,6 +295,54 @@ export default function CRMDashboard({
     };
   }, [surveys, questions, advisors]);
 
+  // Dynamic Complaint & Positive Themes from surveys
+  const complaintThemes = useMemo(() => {
+    if (surveys.length === 0) return [];
+    
+    // Count detractors (< 7) for each question
+    const items = questions.map(q => {
+      const count = surveys.filter(s => s[q.id] !== undefined && s[q.id] < 7).length;
+      return {
+        label: `${q.label} (low scores)`,
+        count,
+        color: count > 5 ? 'bg-red-500' : 'bg-amber-500'
+      };
+    }).filter(item => item.count > 0)
+      .sort((a, b) => b.count - a.count);
+      
+    if (items.length === 0) return [];
+    
+    const maxCount = items[0].count;
+    return items.map(item => ({
+      ...item,
+      pct: maxCount > 0 ? Math.round((item.count / maxCount) * 100) : 0
+    }));
+  }, [surveys, questions]);
+
+  const positiveThemes = useMemo(() => {
+    if (surveys.length === 0) return [];
+    
+    // Count promoters (>= 9) for each question
+    const items = questions.map(q => {
+      const count = surveys.filter(s => s[q.id] !== undefined && s[q.id] >= 9).length;
+      return {
+        label: `High satisfaction on: ${q.label}`,
+        count: `${count} reviews`,
+        rawCount: count
+      };
+    }).filter(item => item.rawCount > 0)
+      .sort((a, b) => b.rawCount - a.rawCount);
+      
+    if (items.length === 0) return [];
+    
+    const maxCount = items[0].rawCount;
+    return items.map(item => ({
+      label: item.label,
+      count: item.count,
+      pct: maxCount > 0 ? Math.round((item.rawCount / maxCount) * 100) : 0
+    }));
+  }, [surveys, questions]);
+
   const handleDelete = async (id: string) => {
     setDeletingId(id);
     try {
@@ -1326,68 +1374,78 @@ export default function CRMDashboard({
       {/* ── Tab: VOC & VERBATIMS ── */}
       {activeTab === 'voc' && (
         <div className="space-y-6 animate-fade-in" id="tab-voc">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6" id="voc-themes-row">
-            {/* Complaint themes */}
-            <div className="glass-card rounded-xl p-5 shadow-sm border-slate-200/40">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 mb-1">
-                Top Complaint Themes
-              </h3>
-              <p className="text-[10px] text-slate-500 mb-4">Recurring negative comments in text remarks</p>
-
-              <div className="space-y-3.5 text-xs">
-                {[
-                  { label: 'Customer Lounge Quality (flies, AC cooling, hygiene)', count: 57, pct: 100, color: 'bg-amber-500' },
-                  { label: 'On-Time delivery / late vehicle returns', count: 36, pct: 63, color: 'bg-red-500' },
-                  { label: 'High parts & service pricing complaints', count: 24, pct: 42, color: 'bg-red-400' },
-                  { label: 'Token waiting times and queues too long', count: 18, pct: 32, color: 'bg-slate-400' },
-                  { label: 'Work quality issues (Body & Paint split paint)', count: 7, pct: 12, color: 'bg-slate-400' },
-                ].map((item, i) => (
-                  <div key={i} className="space-y-1">
-                    <div className="flex justify-between font-semibold">
-                      <span className="text-slate-600">{item.label}</span>
-                      <span className="text-slate-900">{item.count} mentions</span>
-                    </div>
-                    <div className="h-1.5 bg-slate-100 rounded overflow-hidden">
-                      <div className={`h-full rounded ${item.color}`} style={{ width: `${item.pct}%` }}></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+          {surveys.length === 0 ? (
+            <div className="glass-card rounded-xl p-8 text-center border-slate-200/40">
+              <MessageSquare className="w-12 h-12 text-slate-350 mx-auto mb-3 opacity-60" />
+              <h3 className="text-sm font-bold text-slate-700">No Feedback Available</h3>
+              <p className="text-xs text-slate-500 mt-1">There are no surveys in the database to generate VOC insights and issues.</p>
             </div>
-
-            {/* Positive themes */}
-            <div className="glass-card rounded-xl p-5 shadow-sm border-slate-200/40 space-y-4">
-              <div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6" id="voc-themes-row">
+              {/* Complaint themes */}
+              <div className="glass-card rounded-xl p-5 shadow-sm border-slate-200/40">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 mb-1">
-                  Key Positive Themes
+                  Top Complaint Themes
                 </h3>
-                <p className="text-[10px] text-slate-500">Loyalty triggers and strengths mentioned</p>
+                <p className="text-[10px] text-slate-500 mb-4">Recurring negative comments in text remarks</p>
+
+                <div className="space-y-3.5 text-xs">
+                  {complaintThemes.length === 0 ? (
+                    <div className="text-slate-400 text-center py-6">
+                      No significant complaint themes detected.
+                    </div>
+                  ) : (
+                    complaintThemes.map((item, i) => (
+                      <div key={i} className="space-y-1">
+                        <div className="flex justify-between font-semibold">
+                          <span className="text-slate-600">{item.label}</span>
+                          <span className="text-slate-900">{item.count} mentions</span>
+                        </div>
+                        <div className="h-1.5 bg-slate-100 rounded overflow-hidden">
+                          <div className={`h-full rounded ${item.color}`} style={{ width: `${item.pct}%` }}></div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
               </div>
 
-              <div className="space-y-3.5 text-xs">
-                {[
-                  { label: 'Highly satisfied / returning customers', count: '120+ reviews', pct: 100 },
-                  { label: 'Polite, cooperative & professional dealing', count: '40+ reviews', pct: 33 },
-                  { label: 'Named advisors praised (especially Naeem, Akasha)', count: '12 reviews', pct: 10 },
-                ].map((item, i) => (
-                  <div key={i} className="space-y-1">
-                    <div className="flex justify-between font-semibold text-green-800">
-                      <span>{item.label}</span>
-                      <span>{item.count}</span>
-                    </div>
-                    <div className="h-1.5 bg-slate-100 rounded overflow-hidden">
-                      <div className="h-full bg-green-500 rounded" style={{ width: `${item.pct}%` }}></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              {/* Positive themes */}
+              <div className="glass-card rounded-xl p-5 shadow-sm border-slate-200/40 space-y-4">
+                <div>
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 mb-1">
+                    Key Positive Themes
+                  </h3>
+                  <p className="text-[10px] text-slate-500">Loyalty triggers and strengths mentioned</p>
+                </div>
 
-              <div className="bg-green-50 p-3.5 border border-green-200 rounded-lg text-xs leading-relaxed text-green-800">
-                <span className="font-bold block text-[11px] text-green-900">Brand Loyalty Signals</span>
-                Multiple customers highlighted switching to Al-Bashir from competitor workshops, visiting since 2007–2016, or traveling from far areas specifically for Al-Bashir service.
+                <div className="space-y-3.5 text-xs">
+                  {positiveThemes.length === 0 ? (
+                    <div className="text-slate-400 text-center py-6">
+                      No positive feedback themes detected yet.
+                    </div>
+                  ) : (
+                    positiveThemes.map((item, i) => (
+                      <div key={i} className="space-y-1">
+                        <div className="flex justify-between font-semibold text-green-800">
+                          <span>{item.label}</span>
+                          <span>{item.count}</span>
+                        </div>
+                        <div className="h-1.5 bg-slate-100 rounded overflow-hidden">
+                          <div className="h-full bg-green-500 rounded" style={{ width: `${item.pct}%` }}></div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                <div className="bg-green-50 p-3.5 border border-green-200 rounded-lg text-xs leading-relaxed text-green-800">
+                  <span className="font-bold block text-[11px] text-green-900">Brand Loyalty Signals</span>
+                  Multiple customers highlighted switching to Al-Bashir from competitor workshops, visiting since 2007–2016, or traveling from far areas specifically for Al-Bashir service.
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Notable Verbatims */}
           <div className="glass-card rounded-xl p-5 shadow-sm border-slate-200/40 space-y-4">
