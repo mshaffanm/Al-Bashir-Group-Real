@@ -1153,7 +1153,7 @@ export default function CRMDashboard({
                 <div className="p-3 bg-red-50 rounded-lg border-l-4 border-l-red-600">
                   <span className="font-bold text-red-800 block text-[11px]">Customer Lounge AC Cooling & Flies Gap</span>
                   <p className="text-slate-700 text-[11px] mt-0.5">
-                    Highest complaining focus parameter (57 detractors). Customers highlight AC shutdown during peak electricity hours, flies in the waiting room, and lack of clean disposable cups. Direct comparisons with Honda and Suzuki.
+                    Highest complaining focus parameter (57 detractors). Customers highlight AC shutdown during peak electricity hours, flies in the waiting room, and lack of clean disposable cups. Direct comparisons with competitor workshops.
                   </p>
                 </div>
 
@@ -1384,7 +1384,7 @@ export default function CRMDashboard({
 
               <div className="bg-green-50 p-3.5 border border-green-200 rounded-lg text-xs leading-relaxed text-green-800">
                 <span className="font-bold block text-[11px] text-green-900">Brand Loyalty Signals</span>
-                Multiple customers highlighted switching to TFM from Suzuki/Honda, visiting since 2007–2016, or traveling all the way from city centers like Rahim Yar Khan specifically for TFM service.
+                Multiple customers highlighted switching to Al-Bashir from competitor workshops, visiting since 2007–2016, or traveling from far areas specifically for Al-Bashir service.
               </div>
             </div>
           </div>
