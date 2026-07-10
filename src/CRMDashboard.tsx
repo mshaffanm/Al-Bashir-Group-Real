@@ -23,6 +23,7 @@ import {
   X,
   ClipboardList,
 } from 'lucide-react';
+import { deleteSurvey, addQuestion, updateQuestion, deleteQuestion, addAdvisor, deleteAdvisor } from './supabaseService';
 import { Survey, Question, Advisor } from './types.js';
 
 interface CRMDashboardProps {
@@ -346,8 +347,8 @@ export default function CRMDashboard({
   const handleDelete = async (id: string) => {
     setDeletingId(id);
     try {
-      const res = await fetch(`/api/surveys/${id}`, { method: 'DELETE' });
-      if (res.ok) {
+      const success = await deleteSurvey(id);
+      if (success) {
         onSurveyDeleted();
       }
     } catch (err) {
@@ -402,38 +403,24 @@ export default function CRMDashboard({
 
     try {
       if (isAddingQuestion) {
-        const res = await fetch('/api/questions', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            header: questionHeader,
-            label: questionLabel,
-            desc: questionDesc,
-          }),
+        await addQuestion({
+          header: questionHeader,
+          label: questionLabel,
+          desc: questionDesc,
         });
-        const data = await res.json();
-        if (res.ok) {
-          setQuestionSuccess('New survey question added successfully.');
-          setIsAddingQuestion(false);
-          setQuestionHeader('');
-          setQuestionLabel('');
-          setQuestionDesc('');
-          onQuestionsUpdated();
-        } else {
-          setQuestionError(data.error || 'Failed to save question.');
-        }
+        setQuestionSuccess('New survey question added successfully.');
+        setIsAddingQuestion(false);
+        setQuestionHeader('');
+        setQuestionLabel('');
+        setQuestionDesc('');
+        onQuestionsUpdated();
       } else if (editingQuestion) {
-        const res = await fetch(`/api/questions/${editingQuestion.id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            header: questionHeader,
-            label: questionLabel,
-            desc: questionDesc,
-          }),
+        const updated = await updateQuestion(editingQuestion.id, {
+          header: questionHeader,
+          label: questionLabel,
+          desc: questionDesc,
         });
-        const data = await res.json();
-        if (res.ok) {
+        if (updated) {
           setQuestionSuccess('Survey question updated successfully.');
           setEditingQuestion(null);
           setQuestionHeader('');
@@ -441,7 +428,7 @@ export default function CRMDashboard({
           setQuestionDesc('');
           onQuestionsUpdated();
         } else {
-          setQuestionError(data.error || 'Failed to update question.');
+          setQuestionError('Failed to update question.');
         }
       }
     } catch (err) {
@@ -456,18 +443,15 @@ export default function CRMDashboard({
     setQuestionError('');
     setQuestionSuccess('');
     try {
-      const res = await fetch(`/api/questions/${id}`, {
-        method: 'DELETE',
-      });
-      const data = await res.json();
-      if (res.ok) {
+      const success = await deleteQuestion(id);
+      if (success) {
         setQuestionSuccess('Question deleted successfully.');
         onQuestionsUpdated();
       } else {
-        setQuestionError(data.error || 'Failed to delete question.');
+        setQuestionError('Failed to delete question.');
       }
     } catch (err) {
-      setQuestionError('Connection error to server.');
+      setQuestionError('Connection error to Supabase.');
     }
   };
 
@@ -481,24 +465,14 @@ export default function CRMDashboard({
     }
 
     try {
-      const res = await fetch('/api/advisors', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: newAdvisorName,
-        }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setAdvisorSuccess(`Advisor "${newAdvisorName.trim()}" added successfully.`);
-        setNewAdvisorName('');
-        setIsAddingAdvisor(false);
-        onAdvisorsUpdated();
-      } else {
-        setAdvisorError(data.error || 'Failed to save advisor.');
-      }
+      await addAdvisor({ name: newAdvisorName.trim() });
+      setAdvisorSuccess(`Advisor "${newAdvisorName.trim()}" added successfully.`);
+      setNewAdvisorName('');
+      setIsAddingAdvisor(false);
+      onAdvisorsUpdated();
     } catch (err) {
-      setAdvisorError('Connection error to server.');
+      console.error(err);
+      setAdvisorError('Connection error to Supabase.');
     }
   };
 
@@ -509,18 +483,16 @@ export default function CRMDashboard({
     setAdvisorError('');
     setAdvisorSuccess('');
     try {
-      const res = await fetch(`/api/advisors/${encodeURIComponent(name)}`, {
-        method: 'DELETE',
-      });
-      const data = await res.json();
-      if (res.ok) {
+      const success = await deleteAdvisor(name);
+      if (success) {
         setAdvisorSuccess(`Advisor "${name}" deleted successfully.`);
         onAdvisorsUpdated();
       } else {
-        setAdvisorError(data.error || 'Failed to delete advisor.');
+        setAdvisorError('Failed to delete advisor.');
       }
     } catch (err) {
-      setAdvisorError('Connection error to server.');
+      console.error(err);
+      setAdvisorError('Connection error to Supabase.');
     }
   };
 

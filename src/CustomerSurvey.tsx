@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Sparkles, CheckCircle, User, Car, FileText, Sliders, Loader2, RefreshCw } from 'lucide-react';
+import { addSurvey } from './supabaseService';
 import { Survey, Question, Advisor } from './types.js';
 
 interface CustomerSurveyProps {
@@ -57,31 +58,8 @@ export default function CustomerSurvey({ questions = [], advisors = [], onSurvey
     setLoadingAI(true);
     setErrorMsg('');
     try {
-      const res = await fetch('/api/gemini/parse-survey', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ feedback: feedbackText }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setCustomerName(data.customerName || '');
-        setRegNumber(data.regNumber || '');
-        setAdvisorName(data.advisorName || 'Naeem');
-        
-        const parsedRatings: { [key: string]: number } = {};
-        questions.forEach(q => {
-          parsedRatings[q.id] = data[q.id] !== undefined ? Number(data[q.id]) : 10;
-        });
-        setRatings(parsedRatings);
-        setRemarks(data.remarks || feedbackText);
-        
-        // Switch to showing the form below with values
-        setErrorMsg('');
-      } else {
-        setErrorMsg(data.error || 'Failed to analyze feedback. Please fill in the details manually.');
-      }
-    } catch (err) {
-      setErrorMsg('Error contacting server. Please fill in the details manually.');
+      // Gemini parsing is not available because the backend server is not deployed.
+      setErrorMsg('AI parsing is disabled in this deployment. Please fill in the feedback manually.');
     } finally {
       setLoadingAI(false);
     }
@@ -95,40 +73,32 @@ export default function CustomerSurvey({ questions = [], advisors = [], onSurvey
     }
 
     try {
-      const res = await fetch('/api/surveys', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          customerName,
-          regNumber: regNumber.toUpperCase(),
-          advisorName,
-          remarks,
-          ...ratings
-        }),
+      await addSurvey({
+        customerName,
+        regNumber: regNumber.toUpperCase(),
+        advisorName,
+        remarks,
+        ...ratings
       });
 
-      if (res.ok) {
-        setSuccess(true);
-        // Reset Form
-        setCustomerName('');
-        setRegNumber('');
-        setFeedbackText('');
-        setRemarks('');
-        
-        const resetRatings: { [key: string]: number } = {};
-        questions.forEach(q => {
-          resetRatings[q.id] = 10;
-        });
-        setRatings(resetRatings);
-        
-        // Notify Parent Dashboard
-        onSurveySubmitted();
-      } else {
-        const data = await res.json();
-        setErrorMsg(data.error || 'Failed to submit survey.');
-      }
+      setSuccess(true);
+      // Reset Form
+      setCustomerName('');
+      setRegNumber('');
+      setFeedbackText('');
+      setRemarks('');
+      
+      const resetRatings: { [key: string]: number } = {};
+      questions.forEach(q => {
+        resetRatings[q.id] = 10;
+      });
+      setRatings(resetRatings);
+      
+      // Notify Parent Dashboard
+      onSurveySubmitted();
     } catch (err) {
-      setErrorMsg('Error submitting survey to server.');
+      console.error(err);
+      setErrorMsg('Error submitting survey to Supabase.');
     }
   };
 

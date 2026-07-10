@@ -7,6 +7,7 @@ import React, { useState, useEffect } from 'react';
 import { BarChart3, ClipboardList, RefreshCw, Loader2, Lock, KeyRound, ArrowRight } from 'lucide-react';
 import CustomerSurvey from './CustomerSurvey';
 import CRMDashboard from './CRMDashboard';
+import { getSurveys as getSupabaseSurveys, getQuestions as getSupabaseQuestions, getAdvisors as getSupabaseAdvisors } from './supabaseService';
 import { Survey, Question, Advisor } from './types';
 // @ts-ignore
 import alBashirLogo from './al_bashir_logo_1783064957865 (2).jpg';
@@ -75,23 +76,17 @@ export default function App() {
     }
     setError('');
     try {
-      const [surveysRes, questionsRes, advisorsRes] = await Promise.all([
-        fetch('/api/surveys'),
-        fetch('/api/questions'),
-        fetch('/api/advisors')
+      const [surveysData, questionsData, advisorsData] = await Promise.all([
+        getSupabaseSurveys(),
+        getSupabaseQuestions(),
+        getSupabaseAdvisors(),
       ]);
-      if (surveysRes.ok && questionsRes.ok && advisorsRes.ok) {
-        const surveysData = await surveysRes.json();
-        const questionsData = await questionsRes.json();
-        const advisorsData = await advisorsRes.json();
-        setSurveys(surveysData);
-        setQuestions(questionsData);
-        setAdvisors(advisorsData);
-      } else {
-        setError('Failed to load database from server.');
-      }
+      setSurveys(surveysData);
+      setQuestions(questionsData);
+      setAdvisors(advisorsData);
     } catch (err) {
-      setError('Connection error. Server may be starting or offline.');
+      console.error(err);
+      setError('Failed to load database from Supabase.');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -100,11 +95,8 @@ export default function App() {
 
   const handleQuestionsUpdated = async () => {
     try {
-      const res = await fetch('/api/questions');
-      if (res.ok) {
-        const data = await res.json();
-        setQuestions(data);
-      }
+      const questionsData = await getSupabaseQuestions();
+      setQuestions(questionsData);
     } catch (err) {
       console.error(err);
     }
@@ -112,11 +104,8 @@ export default function App() {
 
   const handleAdvisorsUpdated = async () => {
     try {
-      const res = await fetch('/api/advisors');
-      if (res.ok) {
-        const data = await res.json();
-        setAdvisors(data);
-      }
+      const advisorsData = await getSupabaseAdvisors();
+      setAdvisors(advisorsData);
     } catch (err) {
       console.error(err);
     }

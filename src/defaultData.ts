@@ -1,0 +1,60 @@
+import { Advisor, Question } from './types';
+
+export const DEFAULT_ADVISORS: Advisor[] = [
+  { name: 'Iqtdar' },
+  { name: 'Naeem' },
+  { name: 'Bushra' },
+  { name: 'Yasir' },
+  { name: 'Moazzam' }
+];
+
+export const DEFAULT_QUESTIONS: Question[] = [
+  {
+    id: 'recommendLikelihood',
+    header: 'Q1: Rec Outlet',
+    label: 'Recommend Outlet / Dealer',
+    desc: 'How likely is it that you would recommend our outlet/dealer to family or friends?'
+  },
+  {
+    id: 'repeatVisitLikelihood',
+    header: 'Q2: Repeat Visit',
+    label: 'Repeat Visit Likelihood',
+    desc: 'Likelihood of visiting the dealership again for future service?'
+  },
+  {
+    id: 'timelyHandover',
+    header: 'Q3: Timely Handover',
+    label: 'Timely Handover Process',
+    desc: 'Timeliness of handover process (waiting to be greeted, communicating with advisor, key handover)'
+  },
+  {
+    id: 'advisorCourtesy',
+    header: 'Q4: Advisor Courtesy',
+    label: 'Service Advisor Courtesy',
+    desc: 'Attention and courtesy of your assigned Service Advisor'
+  },
+  {
+    id: 'advisorExplanation',
+    header: 'Q5: Advisor Expl.',
+    label: 'Advisor Explanation Quality',
+    desc: 'Thoroughness of explanation on actual work performed and charges at delivery'
+  },
+  {
+    id: 'loungeComfort',
+    header: 'Q6: Lounge Comfort',
+    label: 'Waiting Lounge Comfort',
+    desc: 'Comfort, hygiene, seating, temperature/AC cooling, flies, hygiene of lounge'
+  },
+  {
+    id: 'repairQuality',
+    header: 'Q7: Repair Quality',
+    label: 'Overall Repair Quality',
+    desc: 'How would you rate the overall quality of the repair/maintenance work?'
+  },
+  {
+    id: 'onTimeDelivery',
+    header: 'Q8: On-Time Deliv.',
+    label: 'On-Time Vehicle Delivery',
+    desc: 'Was the vehicle delivered and returned on committed time?'
+  }
+];
